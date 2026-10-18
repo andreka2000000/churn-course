@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 
 	"churn-course/backend/internal/db"
 	"churn-course/backend/internal/handlers"
@@ -69,7 +70,16 @@ func main() {
 
 func corsMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		c.Writer.Header().Set("Access-Control-Allow-Origin", "http://localhost:5173")
+		origin := c.Request.Header.Get("Origin")
+
+		// Разрешаем любой localhost (и с портом, и без)
+		if strings.HasPrefix(origin, "http://localhost") || strings.HasPrefix(origin, "http://127.0.0.1") {
+			c.Writer.Header().Set("Access-Control-Allow-Origin", origin)
+		} else {
+			// Для продакшена (если будешь заливать на сервер)
+			c.Writer.Header().Set("Access-Control-Allow-Origin", "http://localhost")
+		}
+
 		c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
 		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
 		c.Writer.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
