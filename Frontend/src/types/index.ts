@@ -27,6 +27,7 @@ export interface LessonSummary {
   title: string;
   order: number;
   completed: boolean;
+  unlocked: boolean; // <--- Добавлено поле
 }
 
 export interface Lesson {
@@ -57,7 +58,7 @@ export interface RunResult {
   stdout: string;
   stderr: string;
   exit_code: number;
-  files: Record<string, string>; // имя файла → base64
+  files: Record<string, string>;
   duration_ms: number;
 }
 

@@ -11,7 +11,6 @@ import (
 )
 
 // GetCourse — GET /api/v1/courses/:id
-// Возвращает все модули курса с уроками и прогрессом текущего пользователя
 func GetCourse(c *gin.Context) {
 	userID, _ := c.Get("user_id")
 
@@ -49,6 +48,7 @@ func GetCourse(c *gin.Context) {
 		Title     string `json:"title"`
 		Order     int    `json:"order"`
 		Completed bool   `json:"completed"`
+		Unlocked  bool   `json:"unlocked"`
 	}
 	type ModuleResponse struct {
 		ID      uint            `json:"id"`
@@ -58,15 +58,23 @@ func GetCourse(c *gin.Context) {
 	}
 
 	resp := make([]ModuleResponse, 0, len(modules))
+	canUnlockNext := true // Первый урок всегда открыт
+
 	for _, m := range modules {
 		lessons := make([]LessonSummary, 0, len(m.Lessons))
 		for _, l := range m.Lessons {
+			unlocked := canUnlockNext || completedMap[l.ID]
+			
 			lessons = append(lessons, LessonSummary{
 				ID:        l.ID,
 				Title:     l.Title,
 				Order:     l.Order,
 				Completed: completedMap[l.ID],
+				Unlocked:  unlocked,
 			})
+			
+			// Следующий урок откроется только если этот пройден
+			canUnlockNext = completedMap[l.ID]
 		}
 		resp = append(resp, ModuleResponse{
 			ID:      m.ID,
@@ -95,6 +103,25 @@ func GetLesson(c *gin.Context) {
 		First(&lesson, lessonID).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Урок не найден"})
 		return
+	}
+
+	// Проверяем, разблокирован ли урок
+	// Урок открыт, если это самый первый урок, либо если предыдущий успешно пройден.
+	var totalPrev int64
+	db.DB.Model(&models.Lesson{}).Where("id < ?", lesson.ID).Count(&totalPrev)
+	
+	if totalPrev > 0 { // Это не первый урок
+		var prevLesson models.Lesson
+		if err := db.DB.Where("id < ?", lesson.ID).Order("id DESC").First(&prevLesson).Error; err == nil {
+			var prevProgress models.Progress
+			if userID != nil {
+				db.DB.Where("user_id = ? AND lesson_id = ?", userID, prevLesson.ID).First(&prevProgress)
+				if !prevProgress.Completed {
+					c.JSON(http.StatusForbidden, gin.H{"error": "Сначала пройдите предыдущий урок"})
+					return
+				}
+			}
+		}
 	}
 
 	completed := false

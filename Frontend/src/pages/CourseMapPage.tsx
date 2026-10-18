@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { coursesApi } from "../api/courses";
-import { CheckCircle2, Circle, BookOpen } from "lucide-react";
+import { CheckCircle2, Circle, BookOpen, Lock } from "lucide-react"; // Добавлен Lock
 import { FullScreenSpinner } from "../components/ui/Spinner";
 import { ProgressBar } from "../components/ui/ProgressBar";
 
@@ -16,8 +16,7 @@ export function CourseMapPage() {
   if (error || !course) {
     return (
       <div className="max-w-3xl mx-auto p-8 text-center text-gray-400">
-        Не удалось загрузить курс. Проверьте, что бэкенд запущен на{" "}
-        <code className="text-accent">http://localhost:8080</code>
+        Не удалось загрузить курс. Проверьте, что бэкенд запущен.
       </div>
     );
   }
@@ -66,24 +65,34 @@ export function CourseMapPage() {
 
               <div className="space-y-2">
                 {module.lessons.map((lesson) => (
-                  <Link
-                    key={lesson.id}
-                    to={`/lesson/${lesson.id}`}
-                    className="flex items-center gap-3 p-4 rounded-lg bg-bg-secondary hover:bg-bg-tertiary border border-border transition group"
-                  >
-                    {lesson.completed ? (
-                      <CheckCircle2 size={20} className="text-success shrink-0" />
+                  <div key={lesson.id}>
+                    {lesson.unlocked ? (
+                      <Link
+                        to={`/lesson/${lesson.id}`}
+                        className="flex items-center gap-3 p-4 rounded-lg bg-bg-secondary hover:bg-bg-tertiary border border-border transition group"
+                      >
+                        {lesson.completed ? (
+                          <CheckCircle2 size={20} className="text-success shrink-0" />
+                        ) : (
+                          <Circle size={20} className="text-gray-600 shrink-0" />
+                        )}
+                        <span className="font-medium text-gray-200 group-hover:text-white">
+                          {module.order}.{lesson.order} {lesson.title}
+                        </span>
+                        <span className="flex-1" />
+                        <span className="text-gray-500 group-hover:text-accent transition">
+                          →
+                        </span>
+                      </Link>
                     ) : (
-                      <Circle size={20} className="text-gray-600 shrink-0" />
+                      <div className="flex items-center gap-3 p-4 rounded-lg bg-bg-secondary/40 border border-border/50 opacity-60 cursor-not-allowed">
+                        <Lock size={20} className="text-gray-500 shrink-0" />
+                        <span className="font-medium text-gray-500">
+                          {module.order}.{lesson.order} {lesson.title}
+                        </span>
+                      </div>
                     )}
-                    <span className="font-medium text-gray-200 group-hover:text-white">
-                      {module.order}.{lesson.order} {lesson.title}
-                    </span>
-                    <span className="flex-1" />
-                    <span className="text-gray-500 group-hover:text-accent transition">
-                      →
-                    </span>
-                  </Link>
+                  </div>
                 ))}
               </div>
             </section>
