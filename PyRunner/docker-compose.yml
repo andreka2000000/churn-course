@@ -1,0 +1,13 @@
+services:
+  pyrunner:
+    build: .
+    container_name: churn-pyrunner
+    restart: unless-stopped
+    ports:
+      - "9000:9000"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./data:/app/data:ro
+      - ./workspaces:/app/workspaces
+    env_file:
+      - .env

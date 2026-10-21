@@ -1,0 +1,75 @@
+services:
+  # 1. База данных
+  db:
+    image: postgres:16-alpine
+    container_name: churn-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: churn
+      POSTGRES_PASSWORD: churn_secret
+      POSTGRES_DB: churn_course
+    ports:
+      - "5433:5432"
+    volumes:
+      - churn-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U churn -d churn_course"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # 2. Python-песочница (Runner)
+  pyrunner:
+    build: ./PyRunner
+    container_name: churn-pyrunner
+    restart: unless-stopped
+    ports:
+      - "9000:9000"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./PyRunner/data:/app/data:ro
+      - ./PyRunner/workspaces:/app/workspaces
+    env_file:
+      - ./PyRunner/.env
+    environment:
+      - SANDBOX_IMAGE=churn-sandbox:latest
+      - DATA_DIR=/app/data
+      - HOST_DATA_DIR=${PWD}/PyRunner/data
+      - HOST_WORKSPACES_DIR=${PWD}/PyRunner/workspaces
+    depends_on:
+      - db
+
+  # 3. Go-бэкенд
+  backend:
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: churn-backend
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./content:/content
+    environment:
+      - DATABASE_URL=host=db port=5432 user=churn password=churn_secret dbname=churn_course sslmode=disable
+      - SERVER_PORT=8080
+      - JWT_SECRET=super-secret-key
+      - RUNNER_URL=http://pyrunner:9000
+    depends_on:
+      db:
+        condition: service_healthy
+
+  # 4. React-фронтенд
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: churn-frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+
+volumes:
+  churn-pgdata:
