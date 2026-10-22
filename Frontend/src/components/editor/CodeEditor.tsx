@@ -1,6 +1,7 @@
 import Editor from "@monaco-editor/react";
 import type { OnMount } from "@monaco-editor/react";
 import { useRef } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useEditorStore } from "../../store/editorStore";
 import { EditorToolbar } from "./EditorToolbar";
 import { OutputPanel } from "./OutputPanel";
@@ -16,12 +17,24 @@ export function CodeEditor({ lesson }: Props) {
   const code = getCode(lesson.id, lesson.starter_code);
   const { run, submit, lastRun, lastSubmit, isRunning } = useRunner(lesson.id);
   const editorRef = useRef<Parameters<OnMount>[0] | null>(null);
+  const queryClient = useQueryClient();
 
   const handleMount: OnMount = (editor, monaco) => {
     editorRef.current = editor;
 
+    // Ctrl/Cmd + Enter — отправить на проверку
     editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => {
-      submit(editor.getValue());
+      handleSubmit(editor.getValue());
+    });
+  };
+
+  const handleSubmit = (codeToSubmit: string) => {
+    submit(codeToSubmit, {
+      onSuccess: () => {
+        // Обновляем кэш курса и прогресса, чтобы стрелочки и галочки обновились
+        queryClient.invalidateQueries({ queryKey: ["course", 1] });
+        queryClient.invalidateQueries({ queryKey: ["progress"] });
+      },
     });
   };
 
@@ -29,13 +42,13 @@ export function CodeEditor({ lesson }: Props) {
     <div className="flex flex-col h-full">
       <EditorToolbar
         onRun={() => run(code)}
-        onSubmit={() => submit(code)}
+        onSubmit={() => handleSubmit(code)}
         onReset={() => resetCode(lesson.id)}
         isRunning={isRunning}
       />
 
-      <div className="flex-1 grid grid-cols-2 min-h-0">
-        <div className="border-r border-border min-h-0">
+      <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 min-h-0">
+        <div className="border-b lg:border-b-0 lg:border-r border-border min-h-[300px] lg:min-h-0">
           <Editor
             height="100%"
             defaultLanguage="python"

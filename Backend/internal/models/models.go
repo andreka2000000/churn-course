@@ -8,6 +8,8 @@ type User struct {
 	Email        string    `gorm:"uniqueIndex;size:255;not null" json:"email"`
 	Username     string    `gorm:"size:100;not null" json:"username"`
 	PasswordHash string    `gorm:"not null" json:"-"`
+	IsAdmin      bool      `gorm:"default:false" json:"is_admin"`
+	IsVerified   bool      `gorm:"default:false" json:"is_verified"`
 	CreatedAt    time.Time `json:"created_at"`
 
 	Submissions []Submission `gorm:"foreignKey:UserID" json:"-"`

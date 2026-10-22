@@ -26,6 +26,16 @@ export function LoginPage() {
         mode === "login" ? { email, password } : { email, username, password };
 
       const { data } = await api.post(url, payload);
+
+      // Если это регистрация, показываем сообщение и не пускаем в систему
+      if (mode === "register") {
+        setError("");
+        alert(`✅ ${data.message}\n\nСсылка для подтверждения (для теста):\nhttp://localhost:8080/api/v1/auth/verify?email=${email}`);
+        setMode("login");
+        return;
+      }
+
+      // Если это логин, пускаем
       setAuth(data.token, data.user);
       navigate("/");
     } catch (err: any) {
@@ -44,8 +54,8 @@ export function LoginPage() {
       <div className="w-full max-w-md">
         <div className="flex flex-col items-center mb-8">
           <Code2 size={40} className="text-accent mb-3" />
-          <h1 className="text-2xl font-bold text-white">Учи IT</h1>
-          <p className="text-gray-400 text-sm mt-1">
+          <h1 className="text-2xl font-bold text-ui-heading">Учи IT</h1>
+          <p className="text-ui-text text-sm mt-1">
             Прогноз оттока клиентов телеком-оператора
           </p>
         </div>
@@ -57,7 +67,7 @@ export function LoginPage() {
               className={`flex-1 py-2 rounded-md text-sm transition ${
                 mode === "login"
                   ? "bg-accent text-white"
-                  : "text-gray-400 hover:text-white"
+                  : "text-ui-text hover:text-ui-heading"
               }`}
             >
               Вход
@@ -67,7 +77,7 @@ export function LoginPage() {
               className={`flex-1 py-2 rounded-md text-sm transition ${
                 mode === "register"
                   ? "bg-accent text-white"
-                  : "text-gray-400 hover:text-white"
+                  : "text-ui-text hover:text-ui-heading"
               }`}
             >
               Регистрация
@@ -76,20 +86,20 @@ export function LoginPage() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm text-gray-400 mb-1.5">Email</label>
+              <label className="block text-sm text-ui-text mb-1.5">Email</label>
               <input
                 type="email"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-3 py-2 rounded-md bg-bg-primary border border-border focus:border-accent outline-none text-white transition"
+                className="w-full px-3 py-2 rounded-md bg-bg-primary border border-border focus:border-accent outline-none text-ui-heading placeholder:text-ui-text transition"
                 placeholder="student@example.com"
               />
             </div>
 
             {mode === "register" && (
               <div>
-                <label className="block text-sm text-gray-400 mb-1.5">
+                <label className="block text-sm text-ui-text mb-1.5">
                   Имя пользователя
                 </label>
                 <input
@@ -97,21 +107,21 @@ export function LoginPage() {
                   required
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  className="w-full px-3 py-2 rounded-md bg-bg-primary border border-border focus:border-accent outline-none text-white transition"
+                  className="w-full px-3 py-2 rounded-md bg-bg-primary border border-border focus:border-accent outline-none text-ui-heading placeholder:text-ui-text transition"
                   placeholder="Иван"
                 />
               </div>
             )}
 
             <div>
-              <label className="block text-sm text-gray-400 mb-1.5">Пароль</label>
+              <label className="block text-sm text-ui-text mb-1.5">Пароль</label>
               <input
                 type="password"
                 required
                 minLength={6}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-3 py-2 rounded-md bg-bg-primary border border-border focus:border-accent outline-none text-white transition"
+                className="w-full px-3 py-2 rounded-md bg-bg-primary border border-border focus:border-accent outline-none text-ui-heading placeholder:text-ui-text transition"
                 placeholder="••••••"
               />
             </div>

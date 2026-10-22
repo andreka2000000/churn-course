@@ -11,8 +11,18 @@ import (
 )
 
 // GetCourse — GET /api/v1/courses/:id
+// GetCourse — GET /api/v1/courses/:id
 func GetCourse(c *gin.Context) {
 	userID, _ := c.Get("user_id")
+
+	// Проверяем, админ ли пользователь
+	isAdmin := false
+	if userID != nil {
+		var currentUser models.User
+		if err := db.DB.First(&currentUser, userID).Error; err == nil {
+			isAdmin = currentUser.IsAdmin
+		}
+	}
 
 	var modules []models.Module
 	if err := db.DB.
@@ -25,7 +35,6 @@ func GetCourse(c *gin.Context) {
 		return
 	}
 
-	// Собираем все lesson_id для одного запроса прогресса
 	var lessonIDs []uint
 	for _, m := range modules {
 		for _, l := range m.Lessons {
@@ -42,7 +51,6 @@ func GetCourse(c *gin.Context) {
 		}
 	}
 
-	// Формируем ответ
 	type LessonSummary struct {
 		ID        uint   `json:"id"`
 		Title     string `json:"title"`
@@ -58,13 +66,14 @@ func GetCourse(c *gin.Context) {
 	}
 
 	resp := make([]ModuleResponse, 0, len(modules))
-	canUnlockNext := true // Первый урок всегда открыт
+	canUnlockNext := true
 
 	for _, m := range modules {
 		lessons := make([]LessonSummary, 0, len(m.Lessons))
 		for _, l := range m.Lessons {
-			unlocked := canUnlockNext || completedMap[l.ID]
-			
+			// АДМИНУ ДОСТУПНО ВСЁ
+			unlocked := isAdmin || canUnlockNext || completedMap[l.ID]
+
 			lessons = append(lessons, LessonSummary{
 				ID:        l.ID,
 				Title:     l.Title,
@@ -72,8 +81,7 @@ func GetCourse(c *gin.Context) {
 				Completed: completedMap[l.ID],
 				Unlocked:  unlocked,
 			})
-			
-			// Следующий урок откроется только если этот пройден
+
 			canUnlockNext = completedMap[l.ID]
 		}
 		resp = append(resp, ModuleResponse{
@@ -107,10 +115,20 @@ func GetLesson(c *gin.Context) {
 
 	// Проверяем, разблокирован ли урок
 	// Урок открыт, если это самый первый урок, либо если предыдущий успешно пройден.
+	// Проверяем, является ли пользователь админом
+	isAdmin := false
+	if userID != nil {
+		var currentUser models.User
+		if err := db.DB.First(&currentUser, userID).Error; err == nil {
+			isAdmin = currentUser.IsAdmin
+		}
+	}
+
+	// Проверяем, разблокирован ли урок
 	var totalPrev int64
 	db.DB.Model(&models.Lesson{}).Where("id < ?", lesson.ID).Count(&totalPrev)
-	
-	if totalPrev > 0 { // Это не первый урок
+
+	if !isAdmin && totalPrev > 0 { // Если не админ и не первый урок
 		var prevLesson models.Lesson
 		if err := db.DB.Where("id < ?", lesson.ID).Order("id DESC").First(&prevLesson).Error; err == nil {
 			var prevProgress models.Progress

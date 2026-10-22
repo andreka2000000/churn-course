@@ -1,32 +1,73 @@
 package db
 
 import (
+	"crypto/rand"
 	"fmt"
 	"log"
+	"math/big"
 	"os"
 	"path/filepath"
 	"strings"
 
+	"churn-course/backend/internal/auth"
 	"churn-course/backend/internal/models"
 )
 
+// generateSecurePassword создает случайный пароль из 12 символов (буквы и цифры)
+func generateSecurePassword() string {
+	const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+	result := make([]byte, 12)
+	for i := range result {
+		num, _ := rand.Int(rand.Reader, big.NewInt(int64(len(chars))))
+		result[i] = chars[num.Int64()]
+	}
+	return string(result)
+}
+
 // Seed — читает файлы из папки content/ и наполняет БД.
-// Если БД уже содержит модули, seed пропускается.
 func Seed() {
+	// 1. Создаем администратора (если его еще нет)
+	var adminUser models.User
+	if err := DB.Where("email = ?", "admin@churn.ru").First(&adminUser).Error; err != nil {
+		adminPassword := os.Getenv("ADMIN_PASSWORD")
+		if adminPassword == "" {
+			adminPassword = generateSecurePassword()
+			log.Println("=========================================================")
+			log.Println("🔐 СОЗДАН АККАУНТ АДМИНИСТРАТОРА!")
+			log.Println("   Логин:  admin@churn.ru")
+			log.Println("   Пароль:", adminPassword)
+			log.Println("   ВНИМАНИЕ: Сохраните этот пароль, он больше не появится!")
+			log.Println("=========================================================")
+		}
+
+		hash, err := auth.HashPassword(adminPassword)
+		if err != nil {
+			log.Fatalf("❌ Ошибка хеширования пароля админа: %v", err)
+		}
+
+		adminUser = models.User{
+			Email:        "admin@churn.ru",
+			Username:     "Администратор",
+			PasswordHash: hash,
+			IsAdmin:      true,
+			IsVerified:   true,
+		}
+		DB.Create(&adminUser)
+	}
+
+	// 2. Проверяем, есть ли уже модули (чтобы не дублировать)
 	var count int64
 	DB.Model(&models.Module{}).Count(&count)
 	if count > 0 {
-		log.Println("ℹ️  БД уже содержит данные, seed пропущен")
+		log.Println("ℹ️  БД уже содержит данные, seed модулей пропущен")
 		return
 	}
 
 	log.Println("⏳ Начинаем наполнение БД из папки content/...")
 
-	// Корневая папка с контентом (предполагаем, что бэкенд запускается из папки backend)
 	contentDir := "/content"
 
 	for m := 1; m <= 4; m++ {
-		// Читаем название модуля из файла, если он есть, иначе ставим дефолтное
 		moduleTitle := getModuleTitle(m)
 
 		module := models.Module{
@@ -42,7 +83,6 @@ func Seed() {
 			starterPath := filepath.Join(lessonPath, "starter.py")
 			testPath := filepath.Join(lessonPath, "test.py")
 
-			// Проверяем, что файлы существуют
 			theory, err1 := os.ReadFile(theoryPath)
 			starter, err2 := os.ReadFile(starterPath)
 			testScript, err3 := os.ReadFile(testPath)
@@ -52,7 +92,6 @@ func Seed() {
 				continue
 			}
 
-			// Вытаскиваем заголовок урока из теории (первая строка с #)
 			lessonTitle := extractTitle(string(theory))
 			if lessonTitle == "" {
 				lessonTitle = fmt.Sprintf("Урок %d.%d", m, l)
@@ -74,7 +113,6 @@ func Seed() {
 			module.Lessons = append(module.Lessons, lesson)
 		}
 
-		// Сохраняем модуль (GORM каскадно сохранит и уроки, и задачи)
 		if err := DB.Create(&module).Error; err != nil {
 			log.Fatalf("❌ Ошибка seed модуля %d: %v", m, err)
 		}
@@ -84,22 +122,19 @@ func Seed() {
 	log.Println("🎉 Наполнение БД успешно завершено!")
 }
 
-// extractTitle ищет первую строку, начинающуюся с "# ", и возвращает текст без решётки.
 func extractTitle(theory string) string {
 	lines := strings.Split(theory, "\n")
 	for _, line := range lines {
 		line = strings.TrimSpace(line)
 		if strings.HasPrefix(line, "# ") {
-			// Убираем "# " и возможное "Урок X.X — " в начале
 			title := strings.TrimPrefix(line, "# ")
-			title = strings.ReplaceAll(title, "**", "") // Убираем жирный шрифт, если есть
+			title = strings.ReplaceAll(title, "**", "")
 			return title
 		}
 	}
 	return ""
 }
 
-// getModuleTitle возвращает название модуля по его номеру
 func getModuleTitle(m int) string {
 	titles := map[int]string{
 		1: "Зачем телекому прогнозировать отток",

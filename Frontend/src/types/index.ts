@@ -4,6 +4,8 @@ export interface User {
   email: string;
   username: string;
   avatar_url?: string;
+  is_admin?: boolean;
+  is_verified?: boolean;
 }
 
 // ====== Курс ======

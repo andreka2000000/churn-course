@@ -42,6 +42,7 @@ func main() {
 		{
 			authGroup.POST("/register", handlers.Register)
 			authGroup.POST("/login", handlers.Login)
+			authGroup.GET("/verify", handlers.VerifyEmail) // <-- ДОБАВЛЕНО
 		}
 
 		// защищённые
@@ -52,8 +53,11 @@ func main() {
 			protected.GET("/courses/:id", handlers.GetCourse)
 			protected.GET("/lessons/:id", handlers.GetLesson)
 			protected.GET("/progress", handlers.GetProgress)
-			protected.POST("/run", handlers.Run)       // ← новая
-			protected.POST("/submit", handlers.Submit) // ← новая
+			protected.POST("/run", handlers.Run)
+			protected.POST("/submit", handlers.Submit)
+
+			// Админка
+			protected.GET("/admin/users", handlers.GetUsers) // <-- ДОБАВЛЕНО
 		}
 	}
 

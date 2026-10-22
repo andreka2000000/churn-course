@@ -1,3 +1,4 @@
+import { AdminPage } from "./pages/AdminPage";
 import { useEffect } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -33,6 +34,7 @@ export default function App() {
             <Route path="/" element={<CourseMapPage />} />
             <Route path="/lesson/:id" element={<LessonPage />} />
             <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/admin" element={<AdminPage />} />
           </Route>
           <Route path="*" element={<NotFoundPage />} />
         </Routes>

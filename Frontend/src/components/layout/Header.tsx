@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "react-router-dom";
-import { LogOut, User as UserIcon, Code2, Sun, Moon } from "lucide-react";
+import { LogOut, User as UserIcon, Code2, Sun, Moon, ShieldCheck } from "lucide-react";
 import { useAuthStore } from "../../store/authStore";
 import { useThemeStore } from "../../store/themeStore";
 
@@ -31,6 +31,18 @@ export function Header() {
 
         {user ? (
           <>
+            {/* Кнопка админки (видна только админу) */}
+            {user.is_admin && (
+              <Link 
+                to="/admin" 
+                className="flex items-center gap-1.5 text-sm text-accent hover:text-accent-hover transition mr-2"
+                title="Админ-панель"
+              >
+                <ShieldCheck size={16} />
+                Админ-панель
+              </Link>
+            )}
+
             <Link to="/profile" className="flex items-center gap-2 text-sm text-ui-text hover:text-ui-heading transition">
               <UserIcon size={16} />
               {user.username}

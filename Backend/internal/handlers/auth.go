@@ -56,6 +56,7 @@ func Register(c *gin.Context) {
 		Email:        input.Email,
 		Username:     input.Username,
 		PasswordHash: hash,
+		IsVerified:   false, // По умолчанию не подтвержден
 	}
 
 	if err := db.DB.Create(&user).Error; err != nil {
@@ -63,13 +64,10 @@ func Register(c *gin.Context) {
 		return
 	}
 
-	token, err := auth.GenerateToken(user.ID, user.Email)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка генерации токена"})
-		return
-	}
-
-	c.JSON(http.StatusCreated, AuthResponse{Token: token, User: user})
+	// Вместо токена отдаем сообщение о необходимости подтверждения
+	c.JSON(http.StatusCreated, gin.H{
+		"message": "Аккаунт создан. Пожалуйста, подтвердите вашу почту.",
+	})
 }
 
 // Login — POST /api/v1/auth/login
@@ -93,6 +91,12 @@ func Login(c *gin.Context) {
 		return
 	}
 
+	// Проверка на подтверждение почты (пропускаем только если не админ)
+	if !user.IsVerified && !user.IsAdmin {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Пожалуйста, подтвердите вашу почту перед входом."})
+		return
+	}
+
 	token, err := auth.GenerateToken(user.ID, user.Email)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка генерации токена"})
@@ -100,6 +104,24 @@ func Login(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, AuthResponse{Token: token, User: user})
+}
+
+// VerifyEmail — GET /api/v1/auth/verify?email=...
+func VerifyEmail(c *gin.Context) {
+	email := c.Query("email")
+	if email == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Email не указан"})
+		return
+	}
+
+	var user models.User
+	if err := db.DB.Where("email = ?", email).First(&user).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Пользователь не найден"})
+		return
+	}
+
+	db.DB.Model(&user).Update("is_verified", true)
+	c.JSON(http.StatusOK, gin.H{"message": "Почта успешно подтверждена! Теперь вы можете войти."})
 }
 
 // Me — GET /api/v1/auth/me (защищённый)

@@ -20,8 +20,15 @@ export function useRunner(lessonId: number) {
     },
   });
 
-  const run = useCallback((code: string) => runMutation.mutate(code), [runMutation]);
-  const submit = useCallback((code: string) => submitMutation.mutate(code), [submitMutation]);
+  const run = useCallback(
+    (code: string, options?: any) => runMutation.mutate(code, options),
+    [runMutation]
+  );
+
+  const submit = useCallback(
+    (code: string, options?: any) => submitMutation.mutate(code, options),
+    [submitMutation]
+  );
 
   return {
     run,
