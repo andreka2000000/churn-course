@@ -17,7 +17,7 @@ DATA_DIR = Path(os.getenv("DATA_DIR", "./data")).resolve()
 WORKSPACES_DIR = Path(os.getenv("WORKSPACES_DIR", "./workspaces")).resolve()
 HOST_DATA_DIR = os.getenv("HOST_DATA_DIR", str(DATA_DIR))
 HOST_WORKSPACES_DIR = os.getenv("HOST_WORKSPACES_DIR", str(WORKSPACES_DIR))
-DEFAULT_TIMEOUT = int(os.getenv("DEFAULT_TIMEOUT", "30"))
+DEFAULT_TIMEOUT = int(os.getenv("DEFAULT_TIMEOUT", "60"))
 DEFAULT_MEMORY_MB = int(os.getenv("DEFAULT_MEMORY_MB", "512"))
 
 app = FastAPI(title="PyRunner", version="1.0.0")

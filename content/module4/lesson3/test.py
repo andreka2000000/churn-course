@@ -1,29 +1,37 @@
-import io, sys, runpy, re
+import io, sys, runpy
+from fastapi.testclient import TestClient
 
 def test_api_works():
-    captured = io.StringIO()
-    old = sys.stdout
-    sys.stdout = captured
-    try:
-        runpy.run_path('/workspace/solution.py')
-    finally:
-        sys.stdout = old
-    out = captured.getvalue()
+    # 1. Загружаем решение (там создается app)
+    res = runpy.run_path('/workspace/solution.py')
+    app = res.get('app')
+    assert app is not None, "В коде не создано приложение 'app'"
 
-    # Все три теста должны быть в выводе
-    assert "Тест 1 (лояльный):" in out, "Не найден тест 1"
-    assert "Тест 2 (проблемный):" in out, "Не найден тест 2"
-    assert "Тест 3 (невалидные данные" in out, "Не найден тест 3"
+    # 2. Создаем клиент и делаем запросы
+    test_client = TestClient(app)
+    
+    resp1 = test_client.post("/predict", json={
+        "стаж_месяцев": 60,
+        "жалобы_12мес": 0,
+        "просрочки_платежей_12мес": 0,
+        "ежемесячный_платёж_руб": 800,
+    })
+    assert resp1.status_code == 200, "Тест 1 упал с ошибкой"
+    assert resp1.json()["will_churn"] == False, "Лояльный клиент не должен уходить"
 
-    # Лояльный клиент: вероятность низкая (< 0.5)
-    match1 = re.search(r"Тест 1 \(лояльный\):.*'probability':\s*([\d.]+).*'will_churn':\s*(\w+)", out)
-    assert match1, "Не удалось извлечь результат теста 1"
-    assert match1.group(2) == 'False', "Лояльный клиент НЕ должен попадать в зону риска"
+    resp2 = test_client.post("/predict", json={
+        "стаж_месяцев": 3,
+        "жалобы_12мес": 5,
+        "просрочки_платежей_12мес": 4,
+        "ежемесячный_платёж_руб": 500,
+    })
+    assert resp2.status_code == 200, "Тест 2 упал с ошибкой"
+    assert resp2.json()["will_churn"] == True, "Проблемный клиент должен уходить"
 
-    # Проблемный клиент: высокая вероятность (> 0.5)
-    match2 = re.search(r"Тест 2 \(проблемный\):.*'probability':\s*([\d.]+).*'will_churn':\s*(\w+)", out)
-    assert match2, "Не удалось извлечь результат теста 2"
-    assert match2.group(2) == 'True', "Проблемный клиент ДОЛЖЕН попадать в зону риска"
-
-    # Невалидные данные: ошибка 422
-    assert "статус 422" in out, "Невалидные данные должны давать ошибку 422"
+    resp3 = test_client.post("/predict", json={
+        "стаж_месяцев": -5,
+        "жалобы_12мес": 0,
+        "просрочки_платежей_12мес": 0,
+        "ежемесячный_платёж_руб": 500,
+    })
+    assert resp3.status_code == 422, "Невалидные данные должны давать 422 ошибку"

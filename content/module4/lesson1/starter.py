@@ -1,14 +1,14 @@
 import pandas as pd
 import numpy as np
-import joblib
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import shap
+import joblib
 from sklearn.model_selection import train_test_split
 
-# 1. Загружаем модель и данные
-best_model = joblib.load('/workspace/best_model.pkl')
+# 1. Загружаем готовую модель из /data/
+best_model = joblib.load('/data/best_model.pkl')
 
 df = pd.read_csv('/data/churn_ru.csv')
 y = df['отток']
@@ -23,7 +23,6 @@ X_train, X_test, y_train, y_test = train_test_split(
 )
 
 # 2. SHAP explainer
-# Для CatBoost используем TreeExplainer
 explainer = shap.TreeExplainer(best_model)
 shap_values = explainer.shap_values(X_test)
 

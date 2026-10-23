@@ -21,8 +21,6 @@ export function CodeEditor({ lesson }: Props) {
 
   const handleMount: OnMount = (editor, monaco) => {
     editorRef.current = editor;
-
-    // Ctrl/Cmd + Enter — отправить на проверку
     editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => {
       handleSubmit(editor.getValue());
     });
@@ -31,7 +29,6 @@ export function CodeEditor({ lesson }: Props) {
   const handleSubmit = (codeToSubmit: string) => {
     submit(codeToSubmit, {
       onSuccess: () => {
-        // Обновляем кэш курса и прогресса, чтобы стрелочки и галочки обновились
         queryClient.invalidateQueries({ queryKey: ["course", 1] });
         queryClient.invalidateQueries({ queryKey: ["progress"] });
       },
@@ -48,7 +45,8 @@ export function CodeEditor({ lesson }: Props) {
       />
 
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 min-h-0">
-        <div className="border-b lg:border-b-0 lg:border-r border-border min-h-[300px] lg:min-h-0">
+        {/* Контейнер для Monaco с жесткой высотой и скрытием переполнения */}
+        <div className="border-b lg:border-b-0 lg:border-r border-border h-[500px] lg:h-auto lg:min-h-0 overflow-hidden">
           <Editor
             height="100%"
             defaultLanguage="python"
@@ -62,19 +60,30 @@ export function CodeEditor({ lesson }: Props) {
               minimap: { enabled: false },
               scrollBeyondLastLine: false,
               automaticLayout: true,
-              tabSize: 4,
-              wordWrap: "on",
+              
+              // Включаем прокрутку
+              scrollbar: {
+                vertical: 'visible',
+                horizontal: 'visible',
+                useShadows: true,
+                verticalScrollbarSize: 10,
+                horizontalScrollbarSize: 10,
+              },
+              wordWrap: "off", // Отключаем перенос строк, чтобы работала горизонтальная прокрутка
+              
               padding: { top: 12 },
               renderLineHighlight: "all",
             }}
           />
         </div>
 
-        <OutputPanel
-          result={lastRun}
-          submitResult={lastSubmit}
-          isRunning={isRunning}
-        />
+        <div className="h-[500px] lg:h-auto lg:min-h-0 overflow-hidden">
+          <OutputPanel
+            result={lastRun}
+            submitResult={lastSubmit}
+            isRunning={isRunning}
+          />
+        </div>
       </div>
     </div>
   );

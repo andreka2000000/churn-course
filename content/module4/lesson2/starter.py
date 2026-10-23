@@ -3,10 +3,10 @@ import numpy as np
 import joblib
 from sklearn.model_selection import train_test_split
 
-# 1. Загружаем модель и данные
-best_model = joblib.load('/workspace/best_model.pkl')
-
+# 1. Загружаем готовую модель и данные
+best_model = joblib.load('/data/best_model.pkl')
 df = pd.read_csv('/data/churn_ru.csv')
+
 y = df['отток']
 X = df.drop(columns=['отток', 'id_клиента'])
 
@@ -14,11 +14,9 @@ cat_cols = X.select_dtypes(include='object').columns.tolist()
 for col in cat_cols:
     X[col] = X[col].fillna('unknown').astype(str)
 
-X_train, X_test, y_train, y_test = train_test_split(
-    X, y, test_size=0.2, random_state=42, stratify=y
-)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
 
-# 2. Предсказания вероятностей
+# 2. Получаем вероятности оттока
 probs = best_model.predict_proba(X_test)[:, 1]
 
 # 3. Собираем DataFrame для анализа

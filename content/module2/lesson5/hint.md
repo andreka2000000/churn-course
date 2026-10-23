@@ -1,0 +1,1 @@
+Соберите ColumnTransformer для чисел и категорий, оберните его в Pipeline вместе с LogisticRegression.

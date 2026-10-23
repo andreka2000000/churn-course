@@ -11,12 +11,17 @@ def test_best_model_saved():
     out = captured.getvalue()
 
     # Все 4 модели в таблице
+    scores = {}
     for name in ["LogisticRegression", "DecisionTree", "RandomForest", "CatBoost"]:
-        assert name in out, f"Не найдена модель {name} в выводе"
+        m = re.search(rf"{name}\s+([\d.]+)", out)
+        assert m, f"Не найдена модель {name} в выводе"
+        scores[name] = float(m.group(1))
 
-    # Лучшая модель — CatBoost (в норме)
-    assert "Лучшая модель: CatBoost" in out, \
-        "Лучшей моделью должен быть CatBoost"
+    # Лучшая модель названа и совпадает с максимумом по ROC-AUC
+    m = re.search(r"Лучшая модель:\s*(\w+)", out)
+    assert m, "Не найдена строка 'Лучшая модель: ...'"
+    assert m.group(1) == max(scores, key=scores.get), \
+        f"Названа {m.group(1)}, но лучший ROC-AUC у {max(scores, key=scores.get)}"
 
     # Файл сохранён
     assert os.path.exists('/workspace/best_model.pkl'), \

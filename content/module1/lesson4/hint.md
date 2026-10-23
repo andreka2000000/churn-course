@@ -1,0 +1,1 @@
+Для корреляции используйте df.select_dtypes(include='number').corr()['отток'].abs().sort_values(ascending=False).

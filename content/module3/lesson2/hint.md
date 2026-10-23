@@ -1,0 +1,1 @@
+Используйте roc_auc_score() из sklearn.metrics. Не забудьте про predict_proba для получения вероятностей.

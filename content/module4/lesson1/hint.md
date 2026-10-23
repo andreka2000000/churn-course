@@ -1,0 +1,1 @@
+Используйте shap.TreeExplainer для вычисления SHAP-значений. Сохраните график в /workspace/shap_summary.png.

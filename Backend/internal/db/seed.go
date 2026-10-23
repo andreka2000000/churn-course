@@ -82,14 +82,24 @@ func Seed() {
 			theoryPath := filepath.Join(lessonPath, "theory.md")
 			starterPath := filepath.Join(lessonPath, "starter.py")
 			testPath := filepath.Join(lessonPath, "test.py")
+			hintPath := filepath.Join(lessonPath, "hint.md")
 
 			theory, err1 := os.ReadFile(theoryPath)
 			starter, err2 := os.ReadFile(starterPath)
 			testScript, err3 := os.ReadFile(testPath)
 
+			// Читаем подсказку (если файла нет, ошибка проигнорируется)
+			hintBytes, _ := os.ReadFile(hintPath)
+			hintText := strings.TrimSpace(string(hintBytes))
+
 			if err1 != nil || err2 != nil || err3 != nil {
-				log.Printf("⚠️  Пропущен урок %d.%d (не найдены все 3 файла)\n", m, l)
+				log.Printf("⚠️  Пропущен урок %d.%d (не найдены обязательные файлы)\n", m, l)
 				continue
+			}
+
+			// Если файла hint.md нет, ставим дефолтную подсказку
+			if hintText == "" {
+				hintText = "Прочитайте теорию внимательно."
 			}
 
 			lessonTitle := extractTitle(string(theory))
@@ -104,7 +114,7 @@ func Seed() {
 				StarterCode: string(starter),
 				Task: models.Task{
 					Description: "Выполните задание, описанное в теории, и напишите код.",
-					Hint:        "Прочитайте теорию внимательно.",
+					Hint:        hintText, // <-- Используем прочитанную подсказку
 					CheckScript: string(testScript),
 					MaxScore:    10,
 				},

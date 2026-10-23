@@ -1,0 +1,1 @@
+Чтобы CatBoost обогнал LogisticRegression, попробуйте увеличить iterations до 1000, уменьшить learning_rate до 0.05 и увеличить depth до 8.

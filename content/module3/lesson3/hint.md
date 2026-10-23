@@ -1,0 +1,1 @@
+Обучите DecisionTreeClassifier и RandomForestClassifier, затем сравните их roc_auc_score.
