@@ -17,7 +17,7 @@ for col in cat_cols:
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
 
 # 2. Получаем вероятности оттока
-probs = best_model.predict_proba(X_test)[:, 1]
+probs = ...  # ваш код: вероятности класса 1 на X_test
 
 # 3. Собираем DataFrame для анализа
 test_df = pd.DataFrame({
@@ -36,10 +36,10 @@ print("-" * 90)
 results = []
 for n in [100, 200, 500, 1000, 2000]:
     top_n = test_df.head(n)
-    actual_churn = top_n['отток'].mean()
-    retained = n * actual_churn * EFFECTIVE_RATE
-    savings = retained * LTV
-    costs = n * COST_PER_ATTEMPT
+    actual_churn = ...  # ваш код: доля реально уходящих в топ-N
+    retained = ...  # ваш код: сколько удержим
+    savings = ...  # ваш код: экономия в рублях
+    costs = ...  # ваш код: затраты в рублях
     net = savings - costs
 
     results.append({'n': n, 'net': net})

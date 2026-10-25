@@ -10,17 +10,17 @@ numeric_cols = df.select_dtypes(include='number').columns.drop('отток')
 X = df[numeric_cols]
 y = df['отток']
 
-# 2. Train/test split
+# 2. Train/test split (скопируйте как есть — подробности в уроке 2.5)
 X_train, X_test, y_train, y_test = train_test_split(
     X, y, test_size=0.2, random_state=42, stratify=y
 )
 
-# 3. SMOTE
+# 3. SMOTE — применяем ТОЛЬКО к тренировочной выборке
 smote = SMOTE(random_state=42)
-X_train_res, y_train_res = smote.fit_resample(X_train, y_train)
+X_train_res, y_train_res = ...  # ваш код: примените smote к X_train, y_train
 
 # 4. Вывод
 print("До SMOTE:")
 print(y_train.value_counts())
 print("\nПосле SMOTE:")
-print(y_train_res.value_counts())
+print(...)  # ваш код: распределение классов после SMOTE

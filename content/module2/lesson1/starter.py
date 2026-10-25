@@ -16,8 +16,8 @@ Q1 = df['arpu_руб'].quantile(0.25)
 Q3 = df['arpu_руб'].quantile(0.75)
 IQR = Q3 - Q1
 
-lower = ...  # ваш код
-upper = ...  # ваш код
+lower = ...  # ваш код: нижняя граница по правилу IQR
+upper = ...  # ваш код: верхняя граница по правилу IQR
 
 outliers_count = ((df['arpu_руб'] < lower) | (df['arpu_руб'] > upper)).sum()
 print(f"Найдено выбросов: {outliers_count}")

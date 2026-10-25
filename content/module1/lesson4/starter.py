@@ -18,6 +18,10 @@ df[df['отток'] == 1]['стаж_месяцев'].hist(
 ax.set_xlabel('Стаж, месяцев')
 ax.legend()
 plt.savefig('/workspace/tenure_hist.png')
+plt.close()
 
 # 2. Корреляция с оттоком (только числовые колонки)
-# ваш код
+numeric_cols = ...  # ваш код
+corr = ...  # ваш код
+print("Топ признаков по корреляции с оттоком:")
+print(corr.head(6))

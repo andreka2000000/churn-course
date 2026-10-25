@@ -40,22 +40,22 @@ preprocessor = ColumnTransformer([
 # 1. Logistic Regression
 pipe_lr = Pipeline([('prep', preprocessor), ('model', LogisticRegression(class_weight='balanced', max_iter=1000))])
 pipe_lr.fit(X_train, y_train)
-auc_lr = roc_auc_score(y_test, pipe_lr.predict_proba(X_test)[:, 1])
+auc_lr = ...  # ваш код: ROC-AUC
 
 # 2. Decision Tree
 pipe_dt = Pipeline([('prep', preprocessor), ('model', DecisionTreeClassifier(max_depth=5, class_weight='balanced', random_state=42))])
 pipe_dt.fit(X_train, y_train)
-auc_dt = roc_auc_score(y_test, pipe_dt.predict_proba(X_test)[:, 1])
+auc_dt = ...  # ваш код: ROC-AUC
 
 # 3. Random Forest
 pipe_rf = Pipeline([('prep', preprocessor), ('model', RandomForestClassifier(n_estimators=100, max_depth=10, class_weight='balanced', random_state=42, n_jobs=-1))])
 pipe_rf.fit(X_train, y_train)
-auc_rf = roc_auc_score(y_test, pipe_rf.predict_proba(X_test)[:, 1])
+auc_rf = ...  # ваш код: ROC-AUC
 
 # 4. CatBoost
 model_cb = CatBoostClassifier(iterations=500, depth=6, learning_rate=0.1, cat_features=cat_cols, verbose=False, random_seed=42)
 model_cb.fit(Xc_train, y_train)
-auc_cb = roc_auc_score(y_test, model_cb.predict_proba(Xc_test)[:, 1])
+auc_cb = ...  # ваш код: ROC-AUC
 
 # 5. Собираем таблицу
 results = pd.DataFrame([

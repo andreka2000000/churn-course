@@ -31,8 +31,8 @@ model = CatBoostClassifier(
 model.fit(X_train, y_train)
 
 # 2. Считаем метрики
-y_proba = model.predict_proba(X_test)[:, 1]
-auc = roc_auc_score(y_test, y_proba)
+y_proba = ...  # ваш код: вероятности класса 1 на тесте
+auc = ...  # ваш код: ROC-AUC
 print(f"CatBoost ROC-AUC: {auc:.4f}")
 
 # 3. Сравнение с Random Forest (из урока 3.3, ~0.82)

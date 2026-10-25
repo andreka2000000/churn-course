@@ -12,8 +12,8 @@ y = df['отток']
 X = df.drop(columns=['отток'])
 
 # 2. Определяем типы колонок
-numeric_cols = X.select_dtypes(include='number').columns.tolist()
-categorical_cols = X.select_dtypes(include='object').columns.tolist()
+numeric_cols = ...  # ваш код: список числовых колонок
+categorical_cols = ...  # ваш код: список строковых колонок
 
 # 3. Train/test split со стратификацией
 X_train, X_test, y_train, y_test = train_test_split(

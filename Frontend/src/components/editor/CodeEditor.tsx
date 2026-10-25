@@ -44,7 +44,7 @@ export function CodeEditor({ lesson }: Props) {
         isRunning={isRunning}
       />
 
-      <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 min-h-0">
+      <div className="flex-1 grid grid-cols-1 lg:grid-cols-[1.6fr_1fr] min-h-0">
         {/* Контейнер для Monaco с жесткой высотой и скрытием переполнения */}
         <div className="border-b lg:border-b-0 lg:border-r border-border h-[500px] lg:h-auto lg:min-h-0 overflow-hidden">
           <Editor

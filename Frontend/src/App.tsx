@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Layout } from "./components/layout/Layout";
+import { RootLayout } from "./components/layout/RootLayout";
 import { CourseMapPage } from "./pages/CourseMapPage";
 import { LessonPage } from "./pages/LessonPage";
 import { LoginPage } from "./pages/LoginPage";
@@ -29,14 +30,20 @@ export default function App() {
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <Routes>
-          <Route path="/login" element={<LoginPage />} />
-          <Route element={<RequireAuth><Layout /></RequireAuth>}>
-            <Route path="/" element={<CourseMapPage />} />
-            <Route path="/lesson/:id" element={<LessonPage />} />
-            <Route path="/profile" element={<ProfilePage />} />
-            <Route path="/admin" element={<AdminPage />} />
+          {/* Все страницы — с подвалом */}
+          <Route element={<RootLayout />}>
+            <Route path="/login" element={<LoginPage />} />
+
+            {/* Авторизованные — с Header внутри Layout */}
+            <Route element={<RequireAuth><Layout /></RequireAuth>}>
+              <Route path="/" element={<CourseMapPage />} />
+              <Route path="/lesson/:id" element={<LessonPage />} />
+              <Route path="/profile" element={<ProfilePage />} />
+              <Route path="/admin" element={<AdminPage />} />
+            </Route>
+
+            <Route path="*" element={<NotFoundPage />} />
           </Route>
-          <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </BrowserRouter>
     </QueryClientProvider>

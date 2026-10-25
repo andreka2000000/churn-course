@@ -23,8 +23,8 @@ X_train, X_test, y_train, y_test = train_test_split(
 )
 
 # 2. SHAP explainer
-explainer = shap.TreeExplainer(best_model)
-shap_values = explainer.shap_values(X_test)
+explainer = ...  # ваш код: создайте TreeExplainer для best_model
+shap_values = ...  # ваш код: посчитайте SHAP-значения для X_test
 
 # 3. Строим summary plot и сохраняем
 plt.figure()
@@ -34,7 +34,7 @@ plt.savefig('/workspace/shap_summary.png', dpi=100, bbox_inches='tight')
 plt.close()
 
 # 4. Топ-5 признаков по средней абсолютной SHAP
-mean_abs_shap = np.abs(shap_values).mean(axis=0)
+mean_abs_shap = ...  # ваш код: средняя абсолютная SHAP по признакам
 top_idx = np.argsort(mean_abs_shap)[-5:][::-1]
 
 print("Топ-5 признаков по SHAP:")

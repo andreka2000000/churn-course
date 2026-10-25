@@ -36,8 +36,8 @@ pipe = Pipeline([
 pipe.fit(X_train, y_train)
 
 # 5. Анализ весов
-feature_names = pipe.named_steps['preprocessor'].get_feature_names_out()
-weights = pipe.named_steps['model'].coef_[0]
+feature_names = ...  # ваш код: имена фич после ColumnTransformer
+weights = ...  # ваш код: коэффициенты модели
 
 # Найти веса для трёх ключевых признаков
 for feat in ['стаж_месяцев', 'жалобы_12мес', 'просрочки_платежей_12мес']:

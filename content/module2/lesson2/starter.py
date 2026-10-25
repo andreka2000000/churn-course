@@ -4,7 +4,7 @@ from sklearn.preprocessing import LabelEncoder
 df = pd.read_csv('/data/churn_ru.csv')
 
 # 1. Удаляем идентификатор
-df = ...  # ваш код
+df = ...  # ваш код: удалите колонку id_клиента
 
 # 2. One-Hot для номинальных категорий
 df = pd.get_dummies(

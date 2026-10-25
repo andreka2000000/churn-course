@@ -31,7 +31,7 @@ dt = Pipeline([
     ('model', DecisionTreeClassifier(max_depth=5, random_state=42, class_weight='balanced'))
 ])
 dt.fit(X_train, y_train)
-dt_auc = roc_auc_score(y_test, dt.predict_proba(X_test)[:, 1])
+dt_auc = ...  # ваш код: ROC-AUC для Decision Tree
 print(f"Decision Tree ROC-AUC: {dt_auc:.4f}")
 
 # 2. Random Forest
@@ -40,12 +40,12 @@ rf = Pipeline([
     ('model', RandomForestClassifier(n_estimators=100, max_depth=10, random_state=42, class_weight='balanced', n_jobs=-1))
 ])
 rf.fit(X_train, y_train)
-rf_auc = roc_auc_score(y_test, rf.predict_proba(X_test)[:, 1])
+rf_auc = ...  # ваш код: ROC-AUC для Random Forest
 print(f"Random Forest ROC-AUC: {rf_auc:.4f}")
 
 # 3. Feature importances из RF
-feature_names = rf.named_steps['preprocessor'].get_feature_names_out()
-importances = rf.named_steps['model'].feature_importances_
+feature_names = ...  # ваш код: имена фич после preprocessor
+importances = ...  # ваш код: важности признаков из RF
 
 # Топ-10 признаков
 top_idx = np.argsort(importances)[-10:][::-1]
