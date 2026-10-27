@@ -23,9 +23,6 @@ DEFAULT_MEMORY_MB = int(os.getenv("DEFAULT_MEMORY_MB", "512"))
 app = FastAPI(title="PyRunner", version="1.0.0")
 client = docker.from_env()
 
-
-# ============ Схемы ============
-
 class ExecRequest(BaseModel):
     code: str
     test_code: Optional[str] = None
@@ -47,15 +44,9 @@ class ExecResponse(BaseModel):
     tests: list[TestResult] = []
     passed: bool = False
 
-
-# ============ Healthcheck ============
-
 @app.get("/ping")
 def ping():
     return {"status": "ok", "sandbox_image": SANDBOX_IMAGE}
-
-
-# ============ Основная логика ============
 
 @app.post("/execute", response_model=ExecResponse)
 def execute(req: ExecRequest):
@@ -63,10 +54,8 @@ def execute(req: ExecRequest):
     workdir = WORKSPACES_DIR / run_id
     workdir.mkdir(parents=True, exist_ok=True)
 
-    # 1. Кладём код студента
     (workdir / "solution.py").write_text(req.code, encoding="utf-8")
 
-    # 2. Определяем команду
     if req.test_code:
         (workdir / "test_solution.py").write_text(req.test_code, encoding="utf-8")
         command = [
@@ -78,7 +67,6 @@ def execute(req: ExecRequest):
     else:
         command = ["python", "/workspace/solution.py"]
 
-    # 3. Запускаем контейнер
     start = time.time()
     container = None
     try:
@@ -89,12 +77,12 @@ def execute(req: ExecRequest):
             nano_cpus=1_000_000_000,
             network_disabled=True,
             read_only=True,
-            tmpfs={"/tmp": "size=128m"}, # только /tmp в оперативке
+            tmpfs={"/tmp": "size=128m"},
             working_dir="/workspace",
             volumes={
-                f"{HOST_WORKSPACES_DIR}\\{run_id}": {"bind": "/workspace", "mode": "rw"},
+                os.path.join(HOST_WORKSPACES_DIR, run_id): {"bind": "/workspace", "mode": "rw"},
                 HOST_DATA_DIR: {"bind": "/data", "mode": "ro"},
-            },
+}
             environment={"MPLBACKEND": "Agg", "MPLCONFIGDIR": "/tmp"},
             detach=True,
         )
@@ -122,7 +110,6 @@ def execute(req: ExecRequest):
             except Exception:
                 pass
 
-    # 4. Забираем сгенерированные файлы
     files: dict[str, str] = {}
     if workdir.exists():
         for f in workdir.iterdir():
@@ -134,7 +121,6 @@ def execute(req: ExecRequest):
                 except Exception:
                     pass
 
-    # 5. Парсим pytest
     tests: list[TestResult] = []
     passed = False
     if req.test_code:

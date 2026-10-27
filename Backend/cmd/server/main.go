@@ -24,6 +24,7 @@ func main() {
 	db.Seed()
 
 	r := gin.Default()
+	_ = r.SetTrustedProxies(nil)
 	r.Use(corsMiddleware())
 
 	r.GET("/ping", func(c *gin.Context) {
@@ -69,15 +70,21 @@ func main() {
 }
 
 func corsMiddleware() gin.HandlerFunc {
+	allowed := map[string]bool{
+		"http://localhost:5173": true,
+		"http://localhost":      true,
+	}
+	if env := os.Getenv("CORS_ORIGINS"); env != "" {
+		for _, o := range strings.Split(env, ",") {
+			allowed[strings.TrimSpace(o)] = true
+		}
+	}
+
 	return func(c *gin.Context) {
 		origin := c.Request.Header.Get("Origin")
-
-		if strings.HasPrefix(origin, "http://localhost") || strings.HasPrefix(origin, "http://127.0.0.1") {
+		if allowed[origin] {
 			c.Writer.Header().Set("Access-Control-Allow-Origin", origin)
-		} else {
-			c.Writer.Header().Set("Access-Control-Allow-Origin", "http://localhost")
 		}
-
 		c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
 		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
 		c.Writer.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
@@ -86,7 +93,6 @@ func corsMiddleware() gin.HandlerFunc {
 			c.AbortWithStatus(http.StatusNoContent)
 			return
 		}
-
 		c.Next()
 	}
 }
