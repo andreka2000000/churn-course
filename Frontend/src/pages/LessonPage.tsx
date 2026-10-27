@@ -33,7 +33,7 @@ export function LessonPage() {
   const hasNext = currentIndex < allLessons.length - 1 && allLessons[currentIndex + 1].unlocked;
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="h-full flex flex-col">
       <LessonHeader
         title={lesson.title}
         lessonId={lesson.id}
@@ -41,7 +41,7 @@ export function LessonPage() {
         hasNext={hasNext}
       />
 
-      <div className="flex-1 flex flex-col lg:grid lg:grid-cols-[minmax(350px,_1.5fr)_2.4fr_minmax(250px,_0.6fr)] min-h-0 overflow-auto lg:overflow-auto pb-[100px]">
+      <div className="flex-1 flex flex-col lg:grid lg:grid-cols-[minmax(350px,_1.5fr)_2.4fr_minmax(250px,_0.6fr)] min-h-0 overflow-hidden">
         <div className="lg:border-r border-border lg:overflow-auto border-b lg:border-b-0 pb-8 lg:pb-0">
           <TheoryView markdown={lesson.theory_md} />
         </div>

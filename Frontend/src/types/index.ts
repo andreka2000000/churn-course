@@ -1,4 +1,5 @@
 // ====== Пользователь ======
+// ====== Пользователь ======
 export interface User {
   id: number;
   email: string;
@@ -6,6 +7,8 @@ export interface User {
   avatar_url?: string;
   is_admin?: boolean;
   is_verified?: boolean;
+  completed_lessons?: number;
+  total_score?: number;
 }
 
 // ====== Курс ======

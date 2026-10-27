@@ -26,12 +26,6 @@ export function Footer() {
           >
             Контакты
           </button>
-          <a
-            href="#"
-            className="text-ui-text hover:text-accent transition-colors"
-          >
-            О курсе
-          </a>
         </nav>
       </div>
 

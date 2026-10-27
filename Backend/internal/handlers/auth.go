@@ -1,7 +1,9 @@
 package handlers
 
 import (
+	"fmt"
 	"net/http"
+	"os"
 	"strings"
 
 	"churn-course/backend/internal/auth"
@@ -22,9 +24,22 @@ type LoginInput struct {
 	Password string `json:"password" binding:"required"`
 }
 
+type ResendInput struct {
+	Email string `json:"email" binding:"required,email"`
+}
+
 type AuthResponse struct {
 	Token string      `json:"token"`
 	User  models.User `json:"user"`
+}
+
+// verifyURL — собирает ссылку подтверждения (для теста/локалки)
+func verifyURL(email string) string {
+	base := os.Getenv("PUBLIC_BASE_URL")
+	if base == "" {
+		base = "http://localhost:8080"
+	}
+	return fmt.Sprintf("%s/api/v1/auth/verify?email=%s", base, email)
 }
 
 // Register — POST /api/v1/auth/register
@@ -38,14 +53,12 @@ func Register(c *gin.Context) {
 	input.Email = strings.ToLower(strings.TrimSpace(input.Email))
 	input.Username = strings.TrimSpace(input.Username)
 
-	// проверяем, нет ли уже такого email
 	var existing models.User
 	if err := db.DB.Where("email = ?", input.Email).First(&existing).Error; err == nil {
 		c.JSON(http.StatusConflict, gin.H{"error": "Пользователь с таким email уже существует"})
 		return
 	}
 
-	// хешируем пароль
 	hash, err := auth.HashPassword(input.Password)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка хеширования пароля"})
@@ -56,7 +69,7 @@ func Register(c *gin.Context) {
 		Email:        input.Email,
 		Username:     input.Username,
 		PasswordHash: hash,
-		IsVerified:   false, // По умолчанию не подтвержден
+		IsVerified:   false,
 	}
 
 	if err := db.DB.Create(&user).Error; err != nil {
@@ -64,9 +77,9 @@ func Register(c *gin.Context) {
 		return
 	}
 
-	// Вместо токена отдаем сообщение о необходимости подтверждения
 	c.JSON(http.StatusCreated, gin.H{
-		"message": "Аккаунт создан. Пожалуйста, подтвердите вашу почту.",
+		"message":    "Аккаунт создан. Пожалуйста, подтвердите вашу почту.",
+		"verify_url": verifyURL(input.Email),
 	})
 }
 
@@ -91,9 +104,13 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	// Проверка на подтверждение почты (пропускаем только если не админ)
+	// Если почта не подтверждена — отдаём verify_url, чтобы фронт мог показать ссылку
 	if !user.IsVerified && !user.IsAdmin {
-		c.JSON(http.StatusForbidden, gin.H{"error": "Пожалуйста, подтвердите вашу почту перед входом."})
+		c.JSON(http.StatusForbidden, gin.H{
+			"error":      "Пожалуйста, подтвердите вашу почту перед входом.",
+			"code":       "email_not_verified",
+			"verify_url": verifyURL(user.Email),
+		})
 		return
 	}
 
@@ -104,6 +121,34 @@ func Login(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, AuthResponse{Token: token, User: user})
+}
+
+// ResendVerification — POST /api/v1/auth/resend-verification
+// Принимает email, возвращает ссылку подтверждения (если юзер существует и не подтверждён).
+func ResendVerification(c *gin.Context) {
+	var input ResendInput
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	input.Email = strings.ToLower(strings.TrimSpace(input.Email))
+
+	var user models.User
+	if err := db.DB.Where("email = ?", input.Email).First(&user).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Пользователь не найден"})
+		return
+	}
+
+	if user.IsVerified {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Почта уже подтверждена"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message":    "Ссылка подтверждения сгенерирована заново.",
+		"verify_url": verifyURL(user.Email),
+	})
 }
 
 // VerifyEmail — GET /api/v1/auth/verify?email=...

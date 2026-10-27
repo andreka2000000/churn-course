@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { api } from "../api/client";
 import { FullScreenSpinner } from "../components/ui/Spinner";
 import type { User } from "../types";
-import { ShieldCheck, Mail, Users, CheckCircle } from "lucide-react";
+import { ShieldCheck, Mail, Users, CheckCircle, BookOpen, Trophy } from "lucide-react";
 
 export function AdminPage() {
   const { data: users, isLoading } = useQuery({
@@ -17,6 +17,8 @@ export function AdminPage() {
 
   const totalUsers = users?.length || 0;
   const verifiedUsers = users?.filter(u => u.is_verified).length || 0;
+  const totalCompleted = users?.reduce((sum, u) => sum + (u.completed_lessons ?? 0), 0) || 0;
+  const totalScore = users?.reduce((sum, u) => sum + (u.total_score ?? 0), 0) || 0;
 
   return (
     <div className="max-w-5xl mx-auto p-8 overflow-auto h-full">
@@ -26,7 +28,7 @@ export function AdminPage() {
       </div>
 
       {/* Статистика */}
-      <div className="grid grid-cols-2 gap-4 mb-8">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <div className="p-4 rounded-lg bg-bg-secondary border border-border">
           <div className="flex items-center gap-2 text-ui-text text-sm mb-1">
             <Users size={16} /> Всего пользователей
@@ -39,6 +41,18 @@ export function AdminPage() {
           </div>
           <div className="text-2xl font-bold text-success">{verifiedUsers}</div>
         </div>
+        <div className="p-4 rounded-lg bg-bg-secondary border border-border">
+          <div className="flex items-center gap-2 text-ui-text text-sm mb-1">
+            <BookOpen size={16} /> Пройдено уроков (всего)
+          </div>
+          <div className="text-2xl font-bold text-accent">{totalCompleted}</div>
+        </div>
+        <div className="p-4 rounded-lg bg-bg-secondary border border-border">
+          <div className="flex items-center gap-2 text-ui-text text-sm mb-1">
+            <Trophy size={16} /> Баллов (всего)
+          </div>
+          <div className="text-2xl font-bold text-warning">{totalScore}</div>
+        </div>
       </div>
 
       <div className="bg-bg-secondary border border-border rounded-lg overflow-hidden">
@@ -50,6 +64,8 @@ export function AdminPage() {
               <th className="p-4 border-b border-border">Email</th>
               <th className="p-4 border-b border-border">Почта</th>
               <th className="p-4 border-b border-border">Роль</th>
+              <th className="p-4 border-b border-border">Уроков</th>
+              <th className="p-4 border-b border-border">Баллы</th>
             </tr>
           </thead>
           <tbody>
@@ -67,6 +83,12 @@ export function AdminPage() {
                 </td>
                 <td className="p-4 text-sm">
                   {u.is_admin ? <span className="text-accent font-medium">Админ</span> : <span className="text-gray-500">Студент</span>}
+                </td>
+                <td className="p-4 text-sm text-ui-heading font-medium">
+                  {u.completed_lessons ?? 0}
+                </td>
+                <td className="p-4 text-sm text-ui-heading font-medium">
+                  {u.total_score ?? 0}
                 </td>
               </tr>
             ))}

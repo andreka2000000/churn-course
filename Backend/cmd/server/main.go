@@ -32,20 +32,18 @@ func main() {
 
 	api := r.Group("/api/v1")
 	{
-		// health
 		api.GET("/health", func(c *gin.Context) {
 			c.JSON(http.StatusOK, gin.H{"db": "connected"})
 		})
 
-		// auth — публичные
 		authGroup := api.Group("/auth")
 		{
 			authGroup.POST("/register", handlers.Register)
 			authGroup.POST("/login", handlers.Login)
-			authGroup.GET("/verify", handlers.VerifyEmail) // <-- ДОБАВЛЕНО
+			authGroup.GET("/verify", handlers.VerifyEmail)
+			authGroup.POST("/resend-verification", handlers.ResendVerification)
 		}
 
-		// защищённые
 		protected := api.Group("")
 		protected.Use(middleware.RequireAuth())
 		{
@@ -55,9 +53,7 @@ func main() {
 			protected.GET("/progress", handlers.GetProgress)
 			protected.POST("/run", handlers.Run)
 			protected.POST("/submit", handlers.Submit)
-
-			// Админка
-			protected.GET("/admin/users", handlers.GetUsers) // <-- ДОБАВЛЕНО
+			protected.GET("/admin/users", handlers.GetUsers)
 		}
 	}
 
@@ -76,11 +72,9 @@ func corsMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		origin := c.Request.Header.Get("Origin")
 
-		// Разрешаем любой localhost (и с портом, и без)
 		if strings.HasPrefix(origin, "http://localhost") || strings.HasPrefix(origin, "http://127.0.0.1") {
 			c.Writer.Header().Set("Access-Control-Allow-Origin", origin)
 		} else {
-			// Для продакшена (если будешь заливать на сервер)
 			c.Writer.Header().Set("Access-Control-Allow-Origin", "http://localhost")
 		}
 
